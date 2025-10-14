@@ -302,11 +302,6 @@
 
             const API_URL = `${API_URL_BASE}${API_MODEL}:generateContent?key=${apiKey}`;
             
-            // ----------------------------------------------------------------------
-            // [수정] 400 에러 해결: JSON MimeType과 Google Search Tool의 충돌을 피하기 위해
-            // generationConfig의 structured output을 제거하고 systemInstruction을 통해 JSON 출력을 강제합니다.
-            // ----------------------------------------------------------------------
-
             // System Instruction: 모델의 역할과 응답 형식(JSON)을 강제합니다.
             const systemPrompt = `
                 당신은 전문적인 금융 데이터 분석가입니다.
@@ -320,8 +315,8 @@
                     "KOSPI": 2700.50,
                     "KOSDAQ": 850.25,
                     "stocks": [
-                        {"symbol": "005930.KS", "name": "삼성전자", "price": 80000}, // 종목명(name) 필드 추가
-                        {"symbol": "AAPL", "name": "Apple Inc.", "price": 195.50}, // 종목명(name) 필드 추가
+                        {"symbol": "005930.KS", "name": "삼성전자", "price": 80000},
+                        {"symbol": "AAPL", "name": "Apple Inc.", "price": 195.50},
                         ...
                     ]
                 }
@@ -343,7 +338,6 @@
                 systemInstruction: {
                     parts: [{ text: systemPrompt }]
                 }
-                // generationConfig 및 responseSchema 제거
             };
             // ----------------------------------------------------------------------
 
@@ -407,7 +401,7 @@
 
         // 가져온 데이터 미리보기 표시
         function renderFetchedData(data, clientTime) {
-            // [수정] stocksHtml에서 symbol 대신 name과 symbol을 함께 표시
+            // stocksHtml에서 name과 symbol을 함께 표시
             const stocksHtml = data.stocks.map(stock => 
                 `<span class="inline-block bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2 mb-1"
                       title="${stock.symbol}">
@@ -490,11 +484,18 @@
             const firstEntry = journalData[0];
             let headers = ['날짜', 'KOSPI', 'KOSDAQ'];
             
-            // 동적 종목 헤더 추가
-            // 테이블 헤더는 공간 효율을 위해 종목 코드를 유지합니다.
+            // 동적 헤더 및 심볼 키를 저장할 배열
+            const dynamicDisplayHeaders = []; 
+            const dynamicSymbolKeys = []; 
+
+            // [수정] 헤더에 종목 이름과 코드를 함께 표시
             firstEntry.stocks.forEach(stock => {
-                headers.push(stock.symbol);
+                const headerText = `${stock.name} (${stock.symbol})`;
+                dynamicDisplayHeaders.push(headerText);
+                dynamicSymbolKeys.push(stock.symbol); // 데이터 룩업을 위한 키 저장
             });
+            
+            headers.push(...dynamicDisplayHeaders);
             headers.push('메모', '삭제'); // 메모와 삭제 버튼 헤더 추가
 
             tableHead.innerHTML = `
@@ -511,13 +512,16 @@
                     `<td>${formatPrice(entry.KOSDAQ)}</td>`
                 ];
 
-                // 종목 데이터 삽입
-                const stockPrices = {};
-                entry.stocks.forEach(stock => { stockPrices[stock.symbol] = stock.price; });
+                // 현재 엔트리의 종목 가격을 심볼로 찾기 쉽게 Map으로 변환
+                const stockPricesMap = entry.stocks.reduce((map, stock) => {
+                    map[stock.symbol] = stock.price;
+                    return map;
+                }, {});
 
-                // 헤더 순서에 맞춰 데이터 삽입
-                headers.slice(3, -2).forEach(symbol => { // 종목 헤더만 추출
-                    const price = stockPrices[symbol] !== undefined ? formatPrice(stockPrices[symbol]) : '-';
+                // [수정] dynamicSymbolKeys 순서대로 가격 데이터를 삽입
+                dynamicSymbolKeys.forEach(symbol => {
+                    // Symbol 키를 사용하여 가격을 조회
+                    const price = stockPricesMap[symbol] !== undefined ? formatPrice(stockPricesMap[symbol]) : '-';
                     row.push(`<td>${price}</td>`);
                 });
 
@@ -547,11 +551,15 @@
                 return;
             }
 
-            // 1. 헤더 (첫 번째 항목 기준으로 동적 생성)
+            // 1. 헤더 (CSV는 분석 편의를 위해 종목 코드를 헤더로 유지합니다)
             const firstEntry = journalData[0];
             let headers = ['날짜', 'KOSPI', 'KOSDAQ'];
+            const symbolKeys = [];
+
+            // 종목 코드만 헤더로 사용
             firstEntry.stocks.forEach(stock => {
                 headers.push(stock.symbol);
+                symbolKeys.push(stock.symbol);
             });
             headers.push('메모');
 
@@ -568,8 +576,8 @@
                     entry.KOSDAQ
                 ];
 
-                // 헤더 순서에 맞춰 데이터 삽입
-                headers.slice(3, -1).forEach(symbol => { // 종목 헤더만 추출
+                // SymbolKeys 순서에 맞춰 가격 데이터를 삽입
+                symbolKeys.forEach(symbol => { 
                     const price = stockPrices[symbol] !== undefined ? stockPrices[symbol] : '';
                     rowData.push(price);
                 });
