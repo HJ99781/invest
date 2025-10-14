@@ -3,105 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>투자일지 | Investment Journal</title>
-    <!-- Tailwind CSS CDN 로드 -->
+    <title>투자일지</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 사용자 지정 CSS (파스텔 톤 디자인) */
+        /* Inter 폰트 사용 */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
-        :root {
-            --pastel-mint: #e0f7fa;
-            --pastel-lavender: #f3e5f5;
-            --pastel-pink: #fce4ec;
-            --pastel-blue: #e3f2fd;
-            --pastel-yellow: #fffde7;
-            --primary-text: #374151;
-            --secondary-text: #6b7280;
-        }
-
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--pastel-blue); /* 전체 배경 */
-            color: var(--primary-text);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 2rem;
+            background-color: #f7f3f8; /* 아주 연한 파스텔 라벤더 배경 */
+            color: #333;
         }
+        /* 커스텀 스크롤바 (선택 사항) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #b1a0c8; border-radius: 4px; }
+        ::-webkit-scrollbar-track { background: #f7f3f8; }
 
-        .container {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-            max-width: 90vw;
-            width: 1200px;
-        }
-
-        .header {
-            border-bottom: 2px solid var(--pastel-mint);
-            padding-bottom: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .input-card {
-            background-color: var(--pastel-yellow);
-            padding: 1rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #f0e6c5;
-        }
-
-        .api-card {
-            background-color: var(--pastel-lavender);
-            padding: 1rem;
-            border-radius: 0.75rem;
-            margin-bottom: 1.5rem;
-            border: 1px solid #e7d1ec;
-        }
-
-        .btn-primary {
-            background-color: #a8dadc;
-            color: white;
-            transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-            background-color: #89c0c3;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-danger {
-            background-color: #ff9f9f;
-            color: white;
-        }
-        .btn-danger:hover {
-            background-color: #ff8585;
-        }
-
-        .data-table th, .data-table td {
-            padding: 0.75rem 1rem;
-            text-align: left;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .data-table th {
-            background-color: var(--pastel-mint);
-            font-weight: 600;
-            color: #1f2937;
-        }
-
-        /* 반응형 디자인을 위한 테이블 스크롤 */
-        .table-wrapper {
-            overflow-x: auto;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.75rem;
-        }
-
+        /* API 로딩 스피너 애니메이션 */
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: #a8dadc;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #8e6c8f;
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -109,584 +30,588 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
+        /* 테이블 헤더 및 행 스타일 */
+        .journal-table th {
+            background-color: #c7b3d1; /* 파스텔 보라색 헤더 */
+            color: white;
+            padding: 12px 16px;
+        }
+
+        .journal-table td {
+            padding: 12px 16px;
+        }
+
+        .journal-table tr:nth-child(even) {
+            background-color: #fce8f4; /* 짝수 행 연한 핑크 */
+        }
+
+        .journal-table tr:nth-child(odd) {
+            background-color: #ffffff; /* 홀수 행 흰색 */
+        }
+
+        .journal-table tr:hover {
+            background-color: #e5d7ec; /* 호버 시 연한 라벤더 */
+        }
+
+        /* 입력 필드 스타일 */
+        input[type="text"], input[type="date"], textarea {
+            border: 1px solid #d1c4e9;
+            padding: 8px;
+            border-radius: 8px;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus, textarea:focus {
+            border-color: #8e6c8f;
+            outline: none;
+        }
     </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
+    <div id="app" class="max-w-6xl mx-auto bg-white p-6 md:p-10 shadow-xl rounded-2xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-extrabold text-[#8e6c8f] border-b-4 border-[#c7b3d1] pb-2 inline-block">
+                📈 투자일지
+            </h1>
+            <p class="text-md text-gray-500 mt-2">나만의 투자 기록을 매일 정리하고 저장하세요.</p>
+        </header>
 
-<div id="app-container" class="container">
-    <header class="header">
-        <h1 class="text-4xl font-extrabold text-center text-gray-800">✨ 투자일지 (Investment Journal)</h1>
-        <p class="text-center text-sm mt-2 text-secondary-text">매일의 투자 기록과 시장 종가를 관리하고 저장하세요.</p>
-    </header>
-
-    <!-- 1. API 키 설정 영역 -->
-    <div class="api-card">
-        <h2 class="text-xl font-bold mb-3 text-gray-700">⚙️ Gemini API 키 설정</h2>
-        <div class="flex flex-col sm:flex-row gap-3">
-            <input type="password" id="apiKeyInput" placeholder="여기에 Gemini API 키를 입력하세요"
-                   class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-pastel-lavender focus:border-pastel-lavender transition duration-150">
-            <button id="saveApiKeyBtn" class="btn-primary rounded-lg p-2 font-medium whitespace-nowrap">API 키 저장</button>
-        </div>
-        <p id="apiKeyStatus" class="mt-2 text-sm text-gray-600">키가 저장되지 않았습니다.</p>
-    </div>
-
-    <!-- 2. 데이터 입력 및 가져오기 영역 -->
-    <div class="input-card">
-        <h2 class="text-xl font-bold mb-4 text-gray-700">📝 투자 기록 입력</h2>
-
-        <div class="flex flex-col md:flex-row gap-4 mb-4">
-            <!-- 날짜 선택 -->
-            <div class="w-full md:w-1/3">
-                <label for="recordDateInput" class="block text-sm font-medium mb-1">📅 기록 날짜 선택</label>
-                <input type="date" id="recordDateInput" class="w-full p-2 border border-gray-300 rounded-lg">
+        <!-- API 키 설정 영역 -->
+        <section class="mb-8 p-4 bg-purple-50 rounded-xl shadow-inner">
+            <h2 class="text-2xl font-semibold mb-3 text-[#8e6c8f]">🔑 Gemini API 키 설정</h2>
+            <div class="flex flex-col md:flex-row gap-3">
+                <input type="text" id="api-key-input" placeholder="여기에 Gemini API 키를 입력하세요"
+                       class="flex-grow p-2 rounded-lg border border-purple-200 focus:ring-purple-400 focus:border-purple-400 transition">
+                <button id="save-api-key"
+                        class="bg-[#a591b9] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#8e6c8f] transition shadow-md">
+                    저장
+                </button>
             </div>
-            <!-- 종목 설정 (예시 종목) -->
-            <div class="w-full md:w-2/3">
-                <label class="block text-sm font-medium mb-1">🔍 주가 검색 종목 설정 (쉼표로 구분)</label>
-                <!-- 기본 종목 9개로 확장 -->
-                <input type="text" id="stockSymbolsInput" value="005930.KS, 035720.KS, 000660.KS, 051910.KS, 035420.KS, 005380.KS, 006400.KS, 207940.KS, 068270.KS"
-                       placeholder="예: 005930.KS (삼성전자), 035720.KS (카카오)"
-                       class="w-full p-2 border border-gray-300 rounded-lg"
-                       title="종목코드는 네이버/구글 금융에서 확인 가능합니다. KS는 코스피, KQ는 코스닥입니다.">
+            <p id="api-key-status" class="mt-2 text-sm text-purple-600">API 키가 로컬 스토리지에 저장됩니다.</p>
+        </section>
+
+        <!-- 일지 추가 영역 -->
+        <section class="mb-10 p-6 bg-pink-50 rounded-xl shadow-lg">
+            <h2 class="text-2xl font-semibold mb-4 text-[#8e6c8f]">📝 새로운 기록 추가</h2>
+
+            <!-- 날짜 및 종목 설정 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- 날짜 선택 기능 추가 -->
+                <div>
+                    <label for="record-date" class="block text-sm font-medium text-gray-700 mb-1">
+                        기록 날짜 선택
+                    </label>
+                    <input type="date" id="record-date"
+                           class="w-full p-2 rounded-lg border border-pink-200 focus:ring-pink-400 focus:border-pink-400 transition">
+                </div>
+                
+                <div>
+                    <label for="stock-symbols" class="block text-sm font-medium text-gray-700 mb-1">
+                        종목 설정 (쉼표로 구분, 예: 005930.KS, TSLA, AAPL)
+                    </label>
+                    <input type="text" id="stock-symbols" value="005930.KS, 000660.KS, 035420.KS, 005380.KS, 000270.KS"
+                           placeholder="여기에 종목 코드를 입력하세요 (5~15개 권장)"
+                           class="w-full p-2 rounded-lg border border-pink-200 focus:ring-pink-400 focus:border-pink-400 transition">
+                </div>
             </div>
-        </div>
 
-        <div class="flex flex-col sm:flex-row gap-4 mb-4">
-            <!-- 주가 가져오기 버튼 -->
-            <button id="fetchStockDataBtn" class="btn-primary flex-grow p-3 rounded-lg font-bold flex items-center justify-center space-x-2">
-                <div id="loadingSpinner" class="spinner hidden"></div>
-                <span id="fetchBtnText">🗓️ 주가 데이터 가져오기 (Gemini API)</span>
+            <div class="flex flex-col md:flex-row gap-3 mb-4">
+                <button id="fetch-data"
+                        class="flex-grow flex items-center justify-center bg-[#f0a5b8] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#e47e95] transition shadow-lg disabled:opacity-50"
+                        disabled>
+                    종가 가져오기
+                    <span id="loading-indicator" class="ml-2 hidden">
+                        <div class="spinner"></div>
+                    </span>
+                </button>
+            </div>
+
+            <div id="fetched-data-display" class="bg-white p-4 rounded-lg border border-pink-200 hidden">
+                <!-- Fetch된 데이터 미리보기 영역 -->
+            </div>
+            
+            <div class="mt-4 text-sm text-gray-500 p-2 bg-gray-50 rounded-lg border border-gray-100">
+                ⚠️ **데이터 기준일**은 사용자가 선택한 날짜에 가장 가까운 **가장 최근 마감된 거래일의 정확한 종가**를 기록하기 위해 검색됩니다.
+            </div>
+
+            <!-- 메모 입력 및 기록 추가 -->
+            <div class="mt-4">
+                <label for="memo" class="block text-sm font-medium text-gray-700 mb-1">오늘의 투자 메모</label>
+                <textarea id="memo" rows="3" placeholder="오늘의 시장 분석, 투자 결정, 감정 등을 기록하세요."
+                          class="w-full p-2 rounded-lg border border-pink-200 focus:ring-pink-400 focus:border-pink-400 transition"></textarea>
+            </div>
+
+            <button id="add-entry"
+                    class="w-full mt-4 bg-[#8e6c8f] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#a591b9] transition shadow-lg disabled:opacity-50"
+                    disabled>
+                기록 추가
             </button>
-            <!-- 메모 입력 -->
-            <input type="text" id="memoInput" placeholder="오늘의 투자 메모를 여기에 추가하세요 (선택 사항)"
-                   class="flex-grow p-3 border border-gray-300 rounded-lg">
-        </div>
 
-        <p id="stockDataDisplay" class="text-sm mt-2 text-gray-700 bg-gray-100 p-3 rounded-lg"></p>
-        <p id="errorMessage" class="text-sm mt-2 text-red-500 hidden"></p>
+            <p id="message-box" class="mt-3 text-sm text-red-500"></p>
+        </section>
 
-        <!-- 기록 추가 버튼 -->
-        <button id="addRecordBtn" class="btn-primary w-full p-3 rounded-lg font-bold mt-4" disabled>
-            기록 추가하기
-        </button>
+        <!-- 기록 목록 및 CSV 다운로드 -->
+        <section class="p-6 bg-white rounded-xl shadow-lg border border-gray-100">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-[#8e6c8f]">📑 투자 기록 목록</h2>
+                <button id="export-csv"
+                        class="bg-green-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-600 transition shadow-md disabled:opacity-50"
+                        disabled>
+                    엑셀(CSV) 다운로드
+                </button>
+            </div>
+            <div id="journal-list-container" class="overflow-x-auto">
+                <table id="journal-table" class="journal-table w-full text-sm text-left rounded-lg overflow-hidden">
+                    <thead>
+                        <!-- 헤더는 JavaScript에서 동적으로 생성됨 -->
+                    </thead>
+                    <tbody>
+                        <!-- 데이터는 JavaScript에서 동적으로 생성됨 -->
+                    </tbody>
+                </table>
+                <p id="no-data-message" class="text-center text-gray-500 p-4">아직 기록된 일지가 없습니다.</p>
+            </div>
+        </section>
+
     </div>
 
-    <!-- 3. 투자 기록 테이블 -->
-    <div class="mt-8">
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-gray-800">📊 투자 기록 목록</h2>
-            <button id="downloadCsvBtn" class="btn-primary p-2 rounded-lg text-sm">
-                CSV (Excel) 다운로드
-            </button>
-        </div>
+    <script>
+        // 전역 상수 및 변수 설정
+        const API_MODEL = "gemini-2.5-flash-preview-05-20";
+        const API_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
+        const JOURNAL_STORAGE_KEY = 'investmentJournal';
+        const API_KEY_STORAGE_KEY = 'geminiApiKey';
+        const MAX_RETRIES = 8; // API 서버 과부하 오류(503)에 더 잘 대응하기 위해 재시도 횟수를 늘림
 
-        <div class="table-wrapper">
-            <table id="journalTable" class="data-table min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-3 text-xs font-medium tracking-wider rounded-tl-lg">날짜</th>
-                        <th class="px-4 py-3 text-xs font-medium tracking-wider">KOSPI</th>
-                        <th class="px-4 py-3 text-xs font-medium tracking-wider">KOSDAQ</th>
-                        <!-- 동적으로 종목 헤더가 추가될 위치 -->
-                        <th class="px-4 py-3 text-xs font-medium tracking-wider">메모</th>
-                        <th class="px-4 py-3 text-xs font-medium tracking-wider rounded-tr-lg">삭제</th>
-                    </tr>
-                </thead>
-                <tbody id="journalBody" class="bg-white divide-y divide-gray-200">
-                    <!-- 기록이 여기에 동적으로 추가됩니다 -->
-                </tbody>
-            </table>
-        </div>
-        <p id="emptyMessage" class="text-center text-secondary-text mt-4">저장된 투자 기록이 없습니다. 새로운 기록을 추가해보세요.</p>
-    </div>
-</div>
+        // UI 요소
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key');
+        const apiKeyStatus = document.getElementById('api-key-status');
+        const recordDateInput = document.getElementById('record-date'); // 새로 추가된 날짜 입력 필드
+        const stockSymbolsInput = document.getElementById('stock-symbols');
+        const fetchDataBtn = document.getElementById('fetch-data');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const fetchedDataDisplay = document.getElementById('fetched-data-display');
+        const memoInput = document.getElementById('memo');
+        const addEntryBtn = document.getElementById('add-entry');
+        const exportCsvBtn = document.getElementById('export-csv');
+        const journalTable = document.getElementById('journal-table');
+        const messageBox = document.getElementById('message-box');
+        const noDataMessage = document.getElementById('no-data-message');
 
-<script>
-    // Constants
-    const MODEL_NAME = "gemini-2.5-flash-preview-05-20";
-    const API_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
-    const RECORDS_KEY = 'investment_journal_records';
-    const API_KEY_KEY = 'gemini_api_key';
+        let journalData = [];
+        let currentFetchedData = null; // API에서 가져온 임시 데이터 저장
 
-    // UI Elements
-    const apiKeyInput = document.getElementById('apiKeyInput');
-    const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
-    const apiKeyStatus = document.getElementById('apiKeyStatus');
-    const recordDateInput = document.getElementById('recordDateInput'); // [NEW] 날짜 입력 필드
-    const stockSymbolsInput = document.getElementById('stockSymbolsInput');
-    const fetchStockDataBtn = document.getElementById('fetchStockDataBtn');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const fetchBtnText = document.getElementById('fetchBtnText');
-    const memoInput = document.getElementById('memoInput');
-    const addRecordBtn = document.getElementById('addRecordBtn');
-    const stockDataDisplay = document.getElementById('stockDataDisplay');
-    const errorMessage = document.getElementById('errorMessage');
-    const journalTable = document.getElementById('journalTable');
-    const journalBody = document.getElementById('journalBody');
-    const downloadCsvBtn = document.getElementById('downloadCsvBtn');
-    const emptyMessage = document.getElementById('emptyMessage');
+        // --- 헬퍼 함수 ---
 
-    // State
-    let currentStockData = null; // Gemini API에서 가져온 현재 주가 데이터를 저장
-    let apiKey = '';
-    let records = [];
-
-    // --- 1. 초기화 및 API 키 관리 ---
-
-    window.onload = initializeApp;
-
-    function initializeApp() {
-        // 1. API 키 로드
-        loadApiKey();
-
-        // 2. 기록 로드
-        loadRecords();
-
-        // 3. 이벤트 리스너 설정
-        saveApiKeyBtn.addEventListener('click', saveApiKey);
-        fetchStockDataBtn.addEventListener('click', fetchStockData);
-        addRecordBtn.addEventListener('click', addRecord);
-        downloadCsvBtn.addEventListener('click', downloadCsv);
-
-        // 4. 초기 테이블 렌더링
-        renderTable();
-
-        // 5. [NEW] 기본 날짜 설정 (오늘)
-        // YYYY-MM-DD 형식으로 오늘 날짜 설정
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        recordDateInput.value = `${yyyy}-${mm}-${dd}`;
-    }
-
-    function loadApiKey() {
-        const storedKey = localStorage.getItem(API_KEY_KEY);
-        if (storedKey) {
-            apiKey = storedKey;
-            apiKeyInput.value = '******** (저장됨)';
-            apiKeyStatus.textContent = '✅ API 키가 로컬 스토리지에 안전하게 저장되었습니다.';
-            apiKeyInput.setAttribute('disabled', 'true');
-            saveApiKeyBtn.textContent = '키 재설정';
-            saveApiKeyBtn.classList.remove('btn-primary');
-            saveApiKeyBtn.classList.add('btn-danger');
-        } else {
-            apiKeyStatus.textContent = '❌ API 키가 저장되지 않았습니다. 먼저 키를 저장해주세요.';
+        // 현재 시각 가져오기 (클라이언트 시간)
+        function getCurrentDateTime() {
+            const now = new Date();
+            const dateOptions = { year: 'numeric', month: '2-digit', day: '2-digit' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            const date = now.toLocaleDateString('ko-KR', dateOptions);
+            const time = now.toLocaleTimeString('ko-KR', timeOptions);
+            return `${date} ${time}`;
         }
-    }
 
-    function saveApiKey() {
-        if (apiKey) {
-            // 키 재설정
-            apiKey = '';
-            localStorage.removeItem(API_KEY_KEY);
-            apiKeyInput.value = '';
-            apiKeyInput.removeAttribute('disabled');
-            apiKeyStatus.textContent = '❌ API 키가 저장되지 않았습니다. 먼저 키를 저장해주세요.';
-            saveApiKeyBtn.textContent = 'API 키 저장';
-            saveApiKeyBtn.classList.remove('btn-danger');
-            saveApiKeyBtn.classList.add('btn-primary');
-            addRecordBtn.setAttribute('disabled', 'true');
-            currentStockData = null;
-            stockDataDisplay.textContent = '';
-        } else {
-            // 키 저장
-            const inputKey = apiKeyInput.value.trim();
-            if (inputKey) {
-                apiKey = inputKey;
-                localStorage.setItem(API_KEY_KEY, apiKey);
-                loadApiKey(); // 상태 업데이트를 위해 다시 로드
+        // 로컬 스토리지에 API 키 저장
+        function saveApiKey() {
+            const apiKey = apiKeyInput.value.trim();
+            if (apiKey) {
+                localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
+                apiKeyStatus.textContent = "✅ API 키가 저장되었습니다.";
+                apiKeyStatus.classList.replace('text-red-500', 'text-purple-600');
+                fetchDataBtn.disabled = false;
             } else {
-                alertUser("API 키를 입력해주세요.", 'error');
+                localStorage.removeItem(API_KEY_STORAGE_KEY);
+                apiKeyStatus.textContent = "❌ API 키를 입력해주세요.";
+                apiKeyStatus.classList.replace('text-purple-600', 'text-red-500');
+                fetchDataBtn.disabled = true;
             }
         }
-    }
 
-    function loadRecords() {
-        const storedRecords = localStorage.getItem(RECORDS_KEY);
-        if (storedRecords) {
-            try {
-                records = JSON.parse(storedRecords);
-            } catch (e) {
-                console.error("Failed to parse stored records:", e);
-                records = [];
-                localStorage.removeItem(RECORDS_KEY);
-            }
-        }
-    }
-
-    function saveRecords() {
-        localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
-        renderTable();
-    }
-
-    function alertUser(message, type = 'info') {
-        errorMessage.textContent = message;
-        errorMessage.classList.remove('hidden', 'text-red-500', 'text-green-500');
-        if (type === 'error') {
-            errorMessage.classList.add('text-red-500');
-        } else if (type === 'success') {
-            errorMessage.classList.add('text-green-500');
-        }
-        setTimeout(() => errorMessage.classList.add('hidden'), 5000);
-    }
-
-    // --- 2. Gemini API 통신 (주가 가져오기) ---
-    
-    // Exponential backoff을 포함한 fetch 함수
-    async function retryFetch(url, options, retries = 3) {
-        let lastError = null;
-        for (let i = 0; i < retries; i++) {
-            try {
-                const response = await fetch(url, options);
-
-                // 400, 403 에러는 재시도할 필요가 없으므로 즉시 에러 발생시키고 응답 본문 포함
-                if (response.status === 400 || response.status === 403) {
-                    const errorBody = await response.text(); 
-                    // 에러 메시지가 너무 길어지지 않도록 300자까지만 표시
-                    throw new Error(`API 요청 실패: ${response.status} ${response.statusText}. 상세: ${errorBody.substring(0, 300)}`);
-                }
-                
-                if (response.ok) {
-                    return response;
-                }
-                
-                // 429 (Too Many Requests) 또는 5xx 오류는 재시도
-                console.warn(`API 요청 재시도 (${i + 1}/${retries}). 상태 코드: ${response.status}`);
-            } catch (error) {
-                console.error(`Fetch 오류 발생: ${error.message}`);
-                lastError = error;
-                if (i === retries - 1) throw lastError; // 마지막 시도는 에러 재발생
-            }
-
-            // Exponential backoff (1s, 2s, 4s, ...)
-            const delay = Math.pow(2, i) * 1000 + Math.floor(Math.random() * 500);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-        throw new Error("API 요청이 최대 재시도 횟수를 초과하여 실패했습니다.");
-    }
-
-    async function fetchStockData() {
-        if (!apiKey) {
-            alertUser("Gemini API 키를 먼저 저장해주세요.", 'error');
-            return;
-        }
-
-        const symbols = stockSymbolsInput.value.trim().split(',').map(s => s.trim()).filter(s => s.length > 0);
-        if (symbols.length === 0) {
-            alertUser("검색할 종목 코드를 입력해주세요.", 'error');
-            return;
-        }
-        
-        // [MODIFIED] 날짜 입력 필드에서 값을 가져옵니다.
-        const targetDate = recordDateInput.value; 
-        if (!targetDate) {
-            alertUser("기록할 날짜를 선택해주세요.", 'error');
-            return;
-        }
-
-        // UI 상태 업데이트
-        loadingSpinner.classList.remove('hidden');
-        fetchBtnText.textContent = '주가 검색 중...';
-        addRecordBtn.setAttribute('disabled', 'true');
-        stockDataDisplay.textContent = '';
-        currentStockData = null;
-        errorMessage.classList.add('hidden');
-        
-        // [MODIFIED] 시스템 프롬프트: 지정된 날짜를 포함하도록 업데이트합니다.
-        const systemPrompt = `당신은 금융 데이터 분석가입니다. 요청된 지수와 종목의 ${targetDate} 날짜의 공식 종가를 KOSPI, KOSDAQ, 그리고 요청된 종목 코드별로 정확하게 찾으세요. 데이터가 존재하지 않거나 해당 날짜가 휴장일이면 null을 사용하세요. 종가는 15:30 KST 기준입니다. 다른 설명 없이 다음 JSON 구조에 맞는 데이터만 출력해야 합니다.
-{
-  "date": "[YYYY-MM-DD]",
-  "KOSPI": [number],
-  "KOSDAQ": [number],
-  "stocks": [
-    { "symbol": "[string]", "price": [number] }
-  ]
-}`;
-        // [MODIFIED] 사용자 쿼리: 지정된 날짜를 포함하도록 업데이트합니다.
-        const userQuery = `${targetDate} 날짜의 KOSPI 종가, KOSDAQ 종가, 그리고 다음 종목들의 종가를 찾아주세요: ${symbols.join(', ')}. 응답은 JSON만 포함해야 합니다.`;
-        
-        const payload = {
-            contents: [{ parts: [{ text: userQuery }] }],
-            tools: [{ "google_search": {} }], // Google Search Grounding 활성화 (유지)
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-        };
-
-        const apiUrl = `${API_URL_BASE}${MODEL_NAME}:generateContent?key=${apiKey}`;
-
-        // 지수 및 종목 코드를 JSON 응답에 맞게 정렬하기 위해 맵 생성
-        const stockMap = symbols.reduce((acc, symbol) => {
-            acc[symbol] = null; // 초기값 설정
-            return acc;
-        }, {});
-
-
-        try {
-            const response = await retryFetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const result = await response.json();
-            let jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (!jsonText) {
-                console.error("API 응답 내용:", result);
-                throw new Error("API 응답에서 유효한 JSON 데이터를 찾을 수 없습니다. (응답 내용 콘솔 확인)");
-            }
-
-            // JSON 마크다운 펜스 제거 로직
-            if (jsonText.startsWith("```json")) {
-                jsonText = jsonText.substring(7, jsonText.lastIndexOf("```")).trim();
-            } else if (jsonText.startsWith("```")) {
-                jsonText = jsonText.substring(3, jsonText.lastIndexOf("```")).trim();
+        // 로컬 스토리지에서 API 키 로드
+        function loadApiKey() {
+            const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+            if (apiKey) {
+                apiKeyInput.value = apiKey;
+                apiKeyStatus.textContent = "✅ 저장된 API 키가 로드되었습니다.";
+                apiKeyStatus.classList.replace('text-red-500', 'text-purple-600');
+                fetchDataBtn.disabled = false;
+            } else {
+                apiKeyStatus.textContent = "⚠️ API 키를 입력 후 저장하여 기능을 활성화하세요.";
+                apiKeyStatus.classList.replace('text-purple-600', 'text-red-500');
+                fetchDataBtn.disabled = true;
             }
             
-            const data = JSON.parse(jsonText);
+            // 날짜 입력 필드의 기본값을 오늘 날짜로 설정
+            const today = new Date().toISOString().slice(0, 10);
+            recordDateInput.value = today;
+        }
 
-            // 데이터 구조 확인 및 가공
-            const processedStocks = data.stocks.reduce((acc, stock) => {
-                if (stock.symbol && stock.price !== undefined) {
-                    acc[stock.symbol] = stock.price;
+        // 로컬 스토리지에서 일지 데이터 로드
+        function loadJournalData() {
+            const storedData = localStorage.getItem(JOURNAL_STORAGE_KEY);
+            if (storedData) {
+                try {
+                    journalData = JSON.parse(storedData);
+                } catch (e) {
+                    console.error("Error parsing journal data from localStorage:", e);
+                    journalData = [];
                 }
-                return acc;
-            }, {});
+            } else {
+                journalData = [];
+            }
+            renderJournalTable();
+        }
 
-            // 최종 데이터 객체 생성
-            currentStockData = {
-                // API에서 반환된 date를 사용합니다.
-                date: data.date, 
-                KOSPI: data.KOSPI,
-                KOSDAQ: data.KOSDAQ,
-                stocks: {...stockMap, ...processedStocks} // 요청한 모든 종목 포함
+        // 로컬 스토리지에 일지 데이터 저장
+        function saveJournalData() {
+            localStorage.setItem(JOURNAL_STORAGE_KEY, JSON.stringify(journalData));
+            renderJournalTable();
+        }
+
+        // 메시지 박스 표시
+        function showMessage(text, isError = false) {
+            messageBox.textContent = text;
+            messageBox.classList.remove('text-red-500', 'text-green-500');
+            messageBox.classList.add(isError ? 'text-red-500' : 'text-green-500');
+        }
+
+        // 지수 및 주식 종가 데이터 가져오기 (Gemini API)
+        async function fetchStockData() {
+            const apiKey = apiKeyInput.value.trim();
+            const symbols = stockSymbolsInput.value.trim();
+            const selectedDate = recordDateInput.value; // 선택된 날짜 가져오기
+
+            if (!apiKey || !symbols || !selectedDate) {
+                showMessage("API 키, 종목 코드, 그리고 기록 날짜를 모두 입력/선택해주세요.", true);
+                return;
+            }
+
+            // UI 상태 업데이트
+            fetchDataBtn.disabled = true;
+            addEntryBtn.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+            showMessage("데이터를 가져오는 중입니다...", false);
+            fetchedDataDisplay.classList.add('hidden');
+
+            const API_URL = `${API_URL_BASE}${API_MODEL}:generateContent?key=${apiKey}`;
+            
+            // ----------------------------------------------------------------------
+            // [수정] 400 에러 해결: JSON MimeType과 Google Search Tool의 충돌을 피하기 위해
+            // generationConfig의 structured output을 제거하고 systemInstruction을 통해 JSON 출력을 강제합니다.
+            // ----------------------------------------------------------------------
+
+            // System Instruction: 모델의 역할과 응답 형식(JSON)을 강제합니다.
+            const systemPrompt = `
+                당신은 전문적인 금융 데이터 분석가입니다.
+                사용자의 요청에 따라 **반드시 다음 JSON 스키마를 사용하여 응답하십시오.**
+                응답은 **JSON 문자열 그 자체**여야 하며, 어떠한 설명, 서론, 결론, 마크다운 코드 블록(\`\`\`json)도 포함하지 마십시오.
+                모든 가격은 숫자(정수 또는 소수점 두 자리까지) 형식이어야 합니다.
+                
+                JSON 데이터 구조 예시:
+                {
+                    "date": "2025-05-15",
+                    "KOSPI": 2700.50,
+                    "KOSDAQ": 850.25,
+                    "stocks": [
+                        {"symbol": "005930.KS", "name": "삼성전자", "price": 80000}, // 종목명(name) 필드 추가
+                        {"symbol": "AAPL", "name": "Apple Inc.", "price": 195.50}, // 종목명(name) 필드 추가
+                        ...
+                    ]
+                }
+            `;
+
+            // User Query: 실제 검색 요청 내용입니다.
+            const userQuery = `
+                **[최대 강도]** 웹 검색을 사용하여 다음 조건을 충족하는 종가 데이터를 찾으십시오:
+                1. 데이터 기준일은 ${selectedDate}에 가장 가깝고, 이 날짜를 초과하지 않는 가장 최근 거래일의 종가 데이터여야 합니다. (선택한 날짜 이전/당일 중 가장 최근 마감일)
+                2. 데이터의 기준 시점은 한국 시장 마감 시간인 15:30 KST를 충족해야 합니다.
+                3. **각 종목에 대해 종목명(회사 이름)을 반드시 포함하십시오.**
+                검색 대상 지수 및 주식 종목 코드 (쉼표로 구분): KOSPI, KOSDAQ, ${symbols}
+            `;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: [{ "google_search": {} }], // Google Search Grounding 유지
+                
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+                // generationConfig 및 responseSchema 제거
+            };
+            // ----------------------------------------------------------------------
+
+            for (let i = 0; i < MAX_RETRIES; i++) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`API 요청 실패: ${response.status} ${response.statusText} (Response: ${errorBody.substring(0, 100)}...)`);
+                    }
+
+                    const result = await response.json();
+                    
+                    const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (!jsonText) {
+                        throw new Error("API 응답에서 유효한 JSON 텍스트를 찾을 수 없거나 응답이 비어 있습니다.");
+                    }
+
+                    // 응답이 JSON 형식이 아닐 경우를 대비한 추가 검증
+                    let fetchedJson;
+                    try {
+                        fetchedJson = JSON.parse(jsonText);
+                    } catch (e) {
+                        console.error("JSON Parsing Error:", e);
+                        throw new Error("모델이 유효한 JSON 형식을 반환하지 않았습니다. 모델이 설명 텍스트를 추가했을 수 있습니다: " + jsonText.substring(0, 50));
+                    }
+
+
+                    currentFetchedData = fetchedJson;
+                    
+                    // 현재 시각을 클라이언트에서 가져옴
+                    const clientDateTime = getCurrentDateTime();
+
+                    // 데이터 미리보기 렌더링
+                    renderFetchedData(fetchedJson, clientDateTime);
+                    showMessage(`✅ ${fetchedJson.date} 데이터 가져오기 성공! (가장 최근 마감일 기준)`, false);
+                    addEntryBtn.disabled = false;
+                    return; // 성공 시 루프 종료
+
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error.message);
+                    if (i === MAX_RETRIES - 1) {
+                        showMessage(`❌ 데이터 가져오기 실패: ${error.message}. API 키를 확인하거나, 날짜를 다시 선택하거나, 잠시 후 다시 시도해주세요.`, true);
+                    }
+                    // Exponential backoff
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                }
+            }
+
+            // 모든 시도가 실패했을 때 UI 복구
+            fetchDataBtn.disabled = false;
+            loadingIndicator.classList.add('hidden');
+            currentFetchedData = null;
+        }
+
+        // 가져온 데이터 미리보기 표시
+        function renderFetchedData(data, clientTime) {
+            // [수정] stocksHtml에서 symbol 대신 name과 symbol을 함께 표시
+            const stocksHtml = data.stocks.map(stock => 
+                `<span class="inline-block bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2 mb-1"
+                      title="${stock.symbol}">
+                    ${stock.name} (${stock.symbol}): ${formatPrice(stock.price)}
+                </span>`
+            ).join('');
+
+            fetchedDataDisplay.innerHTML = `
+                <p class="text-sm text-gray-500 mb-1">📅 조회 시각: ${clientTime}</p>
+                <p class="font-bold text-lg text-[#8e6c8f] mb-2">📊 데이터 기준일: ${data.date} (가장 최근 마감일)</p>
+                <div class="grid grid-cols-2 gap-2 mb-3 text-sm">
+                    <p><strong>KOSPI:</strong> ${formatPrice(data.KOSPI)}</p>
+                    <p><strong>KOSDAQ:</strong> ${formatPrice(data.KOSDAQ)}</p>
+                </div>
+                <p class="font-semibold text-gray-700 mb-1">개별 종목 종가:</p>
+                <div>${stocksHtml}</div>
+            `;
+            fetchedDataDisplay.classList.remove('hidden');
+        }
+
+        // 가격 포맷팅 헬퍼
+        function formatPrice(price) {
+            if (typeof price === 'number') {
+                // 천 단위 콤마 추가 및 소수점 처리
+                return price.toLocaleString('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+            }
+            return price;
+        }
+
+        // 새로운 기록 추가
+        function addJournalEntry() {
+            if (!currentFetchedData) {
+                showMessage("먼저 '종가 가져오기' 버튼을 눌러 데이터를 불러와주세요.", true);
+                return;
+            }
+
+            const memo = memoInput.value.trim() || '메모 없음';
+            const newEntry = {
+                id: Date.now(),
+                ...currentFetchedData,
+                memo: memo
             };
 
-            displayStockData(currentStockData, symbols);
-            addRecordBtn.removeAttribute('disabled');
-            alertUser(`주가 데이터를 성공적으로 가져왔습니다. (날짜: ${currentStockData.date})`, 'success');
-
-        } catch (error) {
-            // 상세 에러 메시지 표시
-            console.error("Gemini API 호출 오류:", error);
-            alertUser(`주가 정보 검색 실패: ${error.message}. API 키나 네트워크 상태를 확인하세요.`, 'error');
-            currentStockData = null; // 실패 시 데이터 초기화
-        } finally {
-            loadingSpinner.classList.add('hidden');
-            fetchBtnText.textContent = '🗓️ 주가 데이터 가져오기 (Gemini API)';
-        }
-    }
-
-    function displayStockData(data, symbols) {
-        let html = `<strong>날짜:</strong> ${data.date} | <strong>KOSPI:</strong> ${formatNumber(data.KOSPI)} | <strong>KOSDAQ:</strong> ${formatNumber(data.KOSDAQ)}`;
-
-        symbols.forEach(symbol => {
-            const price = data.stocks[symbol];
-            html += ` | <strong>${symbol}:</strong> ${formatNumber(price)}`;
-        });
-        
-        stockDataDisplay.innerHTML = html;
-    }
-
-    function formatNumber(num) {
-        if (num === null || num === undefined) return "N/A";
-        // 큰 숫자의 경우 소수점 없이 표시
-        if (num > 1000) {
-             return new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 }).format(num);
-        }
-        return new Intl.NumberFormat('ko-KR').format(num);
-    }
-
-    // --- 3. 기록 관리 및 렌더링 ---
-
-    function addRecord() {
-        if (!currentStockData) {
-            alertUser("먼저 '주가 데이터 가져오기'를 통해 주가 데이터를 로드해야 합니다.", 'error');
-            return;
-        }
-
-        const newRecord = {
-            id: Date.now(),
-            date: currentStockData.date, // API에서 가져온 실제 날짜를 사용
-            KOSPI: currentStockData.KOSPI,
-            KOSDAQ: currentStockData.KOSDAQ,
-            stocks: currentStockData.stocks, // 종목 코드와 가격이 포함된 객체
-            memo: memoInput.value.trim()
-        };
-
-        // [MODIFIED] 기존 기록 덮어쓰기 로직: API에서 반환된 날짜를 기준으로 확인합니다.
-        const existingIndex = records.findIndex(r => r.date === newRecord.date);
-        
-        if (existingIndex !== -1) {
-            // 기존 기록 삭제 (덮어쓰기)
-            records.splice(existingIndex, 1); 
-            alertUser(`이미 ${newRecord.date} 날짜의 기록이 존재하여 덮어썼습니다.`, 'info');
-        }
-        
-        records.unshift(newRecord); // 가장 최근 기록을 맨 앞에 추가
-        saveRecords();
-
-        // 입력 상태 초기화
-        memoInput.value = '';
-        currentStockData = null;
-        stockDataDisplay.textContent = '';
-        addRecordBtn.setAttribute('disabled', 'true');
-        alertUser("새 투자 기록이 추가되었습니다.", 'success');
-    }
-
-    function deleteRecord(id) {
-        records = records.filter(record => record.id !== id);
-        saveRecords();
-        alertUser("기록이 삭제되었습니다.", 'info');
-    }
-
-    function getStockSymbolsFromRecords(records) {
-        const allSymbols = new Set();
-        records.forEach(record => {
-            Object.keys(record.stocks || {}).forEach(symbol => allSymbols.add(symbol));
-        });
-        return Array.from(allSymbols).sort();
-    }
-
-    function renderTable() {
-        // 테이블 헤더 업데이트
-        const symbols = getStockSymbolsFromRecords(records);
-        const headerRow = journalTable.querySelector('thead tr');
-        
-        // 기존 헤더 (날짜, 코스피, 코스닥, 메모, 삭제) 외의 종목 헤더를 제거
-        Array.from(headerRow.children).forEach((th, index) => {
-            // 'KOSDAQ' 다음 컬럼부터 '메모' 컬럼 전까지의 모든 동적 종목 헤더를 제거
-            if (index >= 3 && index < headerRow.children.length - 2) {
-                th.remove();
+            // 이미 같은 날짜의 데이터가 있는지 확인
+            const isDuplicate = journalData.some(entry => entry.date === newEntry.date);
+            if (isDuplicate) {
+                showMessage(`❌ ${newEntry.date} 날짜의 기록은 이미 존재합니다.`, true);
+                return;
             }
-        });
 
-        // 새로운 종목 헤더 추가
-        const memoHeader = headerRow.querySelector('th:nth-last-child(2)'); // '메모' 헤더
-        symbols.forEach(symbol => {
-            const th = document.createElement('th');
-            th.className = 'px-4 py-3 text-xs font-medium tracking-wider';
-            th.textContent = symbol;
-            headerRow.insertBefore(th, memoHeader); // '메모' 앞에 삽입
-        });
+            journalData.unshift(newEntry); // 최신 데이터를 맨 앞에 추가
+            saveJournalData();
+            
+            // UI 초기화
+            memoInput.value = '';
+            currentFetchedData = null;
+            fetchedDataDisplay.classList.add('hidden');
+            addEntryBtn.disabled = true;
+            showMessage(`✅ ${newEntry.date} 기록이 성공적으로 추가되었습니다.`, false);
+        }
+        
+        // 데이터 테이블 렌더링
+        function renderJournalTable() {
+            const tableHead = journalTable.querySelector('thead');
+            const tableBody = journalTable.querySelector('tbody');
 
-        // '날짜' 헤더와 '삭제' 헤더의 라운드 코너 속성을 다시 설정
-        headerRow.querySelector('th:first-child').classList.add('rounded-tl-lg');
-        headerRow.querySelector('th:last-child').classList.add('rounded-tr-lg');
+            // 데이터가 없으면 메시지 표시
+            if (journalData.length === 0) {
+                tableHead.innerHTML = '';
+                tableBody.innerHTML = '';
+                noDataMessage.classList.remove('hidden');
+                exportCsvBtn.disabled = true;
+                return;
+            }
 
+            noDataMessage.classList.add('hidden');
+            exportCsvBtn.disabled = false;
 
-        // 테이블 본문 업데이트
-        journalBody.innerHTML = '';
-        if (records.length === 0) {
-            journalTable.classList.add('hidden');
-            emptyMessage.classList.remove('hidden');
-            return;
+            // 1. 헤더 생성 (첫 번째 항목 기준으로)
+            const firstEntry = journalData[0];
+            let headers = ['날짜', 'KOSPI', 'KOSDAQ'];
+            
+            // 동적 종목 헤더 추가
+            // 테이블 헤더는 공간 효율을 위해 종목 코드를 유지합니다.
+            firstEntry.stocks.forEach(stock => {
+                headers.push(stock.symbol);
+            });
+            headers.push('메모', '삭제'); // 메모와 삭제 버튼 헤더 추가
+
+            tableHead.innerHTML = `
+                <tr>
+                    ${headers.map(h => `<th scope="col" class="py-3 px-6 text-xs font-semibold uppercase tracking-wider">${h}</th>`).join('')}
+                </tr>
+            `;
+
+            // 2. 바디 생성
+            tableBody.innerHTML = journalData.map(entry => {
+                let row = [
+                    `<td class="font-medium text-gray-900 whitespace-nowrap">${entry.date}</td>`,
+                    `<td>${formatPrice(entry.KOSPI)}</td>`,
+                    `<td>${formatPrice(entry.KOSDAQ)}</td>`
+                ];
+
+                // 종목 데이터 삽입
+                const stockPrices = {};
+                entry.stocks.forEach(stock => { stockPrices[stock.symbol] = stock.price; });
+
+                // 헤더 순서에 맞춰 데이터 삽입
+                headers.slice(3, -2).forEach(symbol => { // 종목 헤더만 추출
+                    const price = stockPrices[symbol] !== undefined ? formatPrice(stockPrices[symbol]) : '-';
+                    row.push(`<td>${price}</td>`);
+                });
+
+                row.push(`<td><p class="max-w-xs truncate">${entry.memo}</p></td>`);
+                row.push(`<td>
+                    <button onclick="deleteEntry(${entry.id})" 
+                            class="text-red-500 hover:text-red-700 transition focus:outline-none">
+                        ❌
+                    </button>
+                </td>`);
+
+                return `<tr>${row.join('')}</tr>`;
+            }).join('');
         }
 
-        journalTable.classList.remove('hidden');
-        emptyMessage.classList.add('hidden');
+        // 기록 삭제
+        window.deleteEntry = function(id) {
+            journalData = journalData.filter(entry => entry.id !== id);
+            saveJournalData();
+            showMessage('기록이 삭제되었습니다.', false);
+        }
 
-        records.forEach(record => {
-            const row = journalBody.insertRow();
-            row.className = 'hover:bg-gray-50 transition duration-150';
+        // CSV 파일로 다운로드
+        function exportToCSV() {
+            if (journalData.length === 0) {
+                showMessage("다운로드할 데이터가 없습니다.", true);
+                return;
+            }
 
-            // 날짜
-            let cell = row.insertCell();
-            cell.textContent = record.date;
-            
-            // KOSPI
-            cell = row.insertCell();
-            cell.textContent = formatNumber(record.KOSPI);
+            // 1. 헤더 (첫 번째 항목 기준으로 동적 생성)
+            const firstEntry = journalData[0];
+            let headers = ['날짜', 'KOSPI', 'KOSDAQ'];
+            firstEntry.stocks.forEach(stock => {
+                headers.push(stock.symbol);
+            });
+            headers.push('메모');
 
-            // KOSDAQ
-            cell = row.insertCell();
-            cell.textContent = formatNumber(record.KOSDAQ);
+            let csvContent = headers.join(',') + '\n';
 
-            // 동적 종목 데이터
-            symbols.forEach(symbol => {
-                cell = row.insertCell();
-                const price = record.stocks?.[symbol];
-                cell.textContent = price !== undefined ? formatNumber(price) : 'N/A';
+            // 2. 데이터 행
+            journalData.forEach(entry => {
+                const stockPrices = {};
+                entry.stocks.forEach(stock => { stockPrices[stock.symbol] = stock.price; });
+
+                let rowData = [
+                    entry.date,
+                    entry.KOSPI,
+                    entry.KOSDAQ
+                ];
+
+                // 헤더 순서에 맞춰 데이터 삽입
+                headers.slice(3, -1).forEach(symbol => { // 종목 헤더만 추출
+                    const price = stockPrices[symbol] !== undefined ? stockPrices[symbol] : '';
+                    rowData.push(price);
+                });
+
+                // 메모 필드는 쉼표 문제 방지를 위해 따옴표로 감쌈
+                rowData.push(`"${entry.memo.replace(/"/g, '""').replace(/\n/g, ' ')}"`);
+                csvContent += rowData.join(',') + '\n';
             });
 
-            // 메모
-            cell = row.insertCell();
-            cell.textContent = record.memo;
-            cell.className = 'text-sm whitespace-pre-wrap max-w-xs';
-
-            // 삭제 버튼
-            cell = row.insertCell();
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'btn-danger p-1 rounded-md text-xs';
-            deleteBtn.textContent = '삭제';
-            deleteBtn.onclick = () => deleteRecord(record.id);
-            cell.appendChild(deleteBtn);
-        });
-    }
-
-    // --- 4. CSV 다운로드 기능 ---
-
-    function downloadCsv() {
-        if (records.length === 0) {
-            alertUser("다운로드할 기록이 없습니다.", 'info');
-            return;
-        }
-
-        const symbols = getStockSymbolsFromRecords(records);
-        
-        // 1. 헤더 생성
-        let csvContent = "날짜,KOSPI 종가,KOSDAQ 종가,";
-        csvContent += symbols.map(s => `${s} 종가`).join(',') + ",메모\n";
-
-        // 2. 데이터 행 생성
-        records.forEach(record => {
-            let row = `${record.date},${record.KOSPI},${record.KOSDAQ},`;
-            
-            // 종목 데이터
-            const stockPrices = symbols.map(symbol => {
-                const price = record.stocks?.[symbol];
-                return price !== undefined && price !== null ? price : '';
-            }).join(',');
-            
-            row += stockPrices;
-            
-            // 메모 (쉼표가 포함될 경우를 대비해 이스케이프 처리)
-            const escapedMemo = `"${record.memo.replace(/"/g, '""')}"`;
-            row += `,${escapedMemo}\n`;
-            
-            csvContent += row;
-        });
-
-        // 3. BOM (Byte Order Mark) 추가 - 엑셀에서 한글 깨짐 방지
-        const BOM = "\uFEFF";
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
-        
-        // 4. 다운로드 링크 생성 및 클릭
-        const filename = `투자일지_기록_${new Date().toISOString().slice(0, 10)}.csv`;
-        const link = document.createElement('a');
-        if (link.download !== undefined) {
+            // 3. 파일 다운로드
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM 추가하여 한글 깨짐 방지
+            const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', filename);
+            link.setAttribute('download', `투자일지_기록_${new Date().toISOString().slice(0, 10)}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            alertUser("CSV 다운로드가 시작되었습니다.", 'success');
-        } else {
-            alertUser("브라우저가 다운로드를 지원하지 않습니다. 콘솔에서 데이터를 확인해주세요.", 'error');
-            console.log(csvContent);
+            showMessage('✅ 기록을 CSV 파일로 다운로드했습니다.', false);
         }
-    }
 
-    // 로컬 저장소 확인 및 초기 안내
-    if (typeof localStorage === 'undefined') {
-        alertUser("경고: 로컬 스토리지를 사용할 수 없습니다. 기록이 저장되지 않습니다.", 'error');
-    }
-</script>
+        // --- 이벤트 리스너 설정 ---
 
+        // API 키 저장 버튼 클릭
+        saveApiKeyBtn.addEventListener('click', saveApiKey);
+
+        // 종가 가져오기 버튼 클릭
+        fetchDataBtn.addEventListener('click', fetchStockData);
+
+        // 기록 추가 버튼 클릭
+        addEntryBtn.addEventListener('click', addJournalEntry);
+
+        // CSV 다운로드 버튼 클릭
+        exportCsvBtn.addEventListener('click', exportToCSV);
+
+        // 초기 로드
+        window.onload = () => {
+            loadApiKey();
+            loadJournalData();
+        };
+
+    </script>
 </body>
 </html>
