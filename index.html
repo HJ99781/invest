@@ -185,7 +185,6 @@
         const API_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models/";
         const JOURNAL_STORAGE_KEY = 'investmentJournal';
         const API_KEY_STORAGE_KEY = 'geminiApiKey';
-        // [추가] 종목 코드 저장을 위한 로컬 스토리지 키
         const STOCK_SYMBOLS_STORAGE_KEY = 'investmentStockSymbols'; 
         const MAX_RETRIES = 8; // API 서버 과부하 오류(503)에 더 잘 대응하기 위해 재시도 횟수를 늘림
 
@@ -193,7 +192,7 @@
         const apiKeyInput = document.getElementById('api-key-input');
         const saveApiKeyBtn = document.getElementById('save-api-key');
         const apiKeyStatus = document.getElementById('api-key-status');
-        const recordDateInput = document.getElementById('record-date'); // 새로 추가된 날짜 입력 필드
+        const recordDateInput = document.getElementById('record-date');
         const stockSymbolsInput = document.getElementById('stock-symbols');
         const fetchDataBtn = document.getElementById('fetch-data');
         const loadingIndicator = document.getElementById('loading-indicator');
@@ -220,24 +219,22 @@
             return `${date} ${time}`;
         }
 
-        // [추가] 로컬 스토리지에 종목 코드 저장
+        // 로컬 스토리지에 종목 코드 저장
         function saveStockSymbols() {
             const symbols = stockSymbolsInput.value.trim();
             if (symbols) {
                 localStorage.setItem(STOCK_SYMBOLS_STORAGE_KEY, symbols);
             } else {
-                // 입력된 값이 없으면 저장소에서도 제거하여 기본값(HTML)이 로드되도록 함
                 localStorage.removeItem(STOCK_SYMBOLS_STORAGE_KEY);
             }
         }
 
-        // [추가] 로컬 스토리지에서 종목 코드 로드
+        // 로컬 스토리지에서 종목 코드 로드
         function loadStockSymbols() {
             const storedSymbols = localStorage.getItem(STOCK_SYMBOLS_STORAGE_KEY);
             if (storedSymbols) {
                 stockSymbolsInput.value = storedSymbols;
             }
-            // 저장된 값이 없으면 HTML에 설정된 기본값 그대로 사용
         }
 
         // 로컬 스토리지에 API 키 저장
@@ -254,7 +251,6 @@
                 apiKeyStatus.classList.replace('text-purple-600', 'text-red-500');
                 fetchDataBtn.disabled = true;
             }
-            // API 키 저장 시 현재 종목 코드도 함께 저장 (선택 사항)
             saveStockSymbols(); 
         }
 
@@ -283,6 +279,8 @@
             if (storedData) {
                 try {
                     journalData = JSON.parse(storedData);
+                    // 데이터 로드 시 날짜 오름차순으로 정렬 (가장 오래된 기록이 위로)
+                    journalData.sort((a, b) => new Date(a.date) - new Date(b.date));
                 } catch (e) {
                     console.error("Error parsing journal data from localStorage:", e);
                     journalData = [];
@@ -310,14 +308,13 @@
         async function fetchStockData() {
             const apiKey = apiKeyInput.value.trim();
             const symbols = stockSymbolsInput.value.trim();
-            const selectedDate = recordDateInput.value; // 선택된 날짜 가져오기
+            const selectedDate = recordDateInput.value;
 
             if (!apiKey || !symbols || !selectedDate) {
                 showMessage("API 키, 종목 코드, 그리고 기록 날짜를 모두 입력/선택해주세요.", true);
                 return;
             }
 
-            // [추가] 데이터 가져오기 전에 현재 종목 코드 저장
             saveStockSymbols();
 
             // UI 상태 업데이트
@@ -329,7 +326,6 @@
 
             const API_URL = `${API_URL_BASE}${API_MODEL}:generateContent?key=${apiKey}`;
             
-            // System Instruction: 모델의 역할과 응답 형식(JSON)을 강제합니다.
             const systemPrompt = `
                 당신은 전문적인 금융 데이터 분석가입니다.
                 사용자의 요청에 따라 **반드시 다음 JSON 스키마를 사용하여 응답하십시오.**
@@ -349,7 +345,6 @@
                 }
             `;
 
-            // User Query: 실제 검색 요청 내용입니다.
             const userQuery = `
                 **[최대 강도]** 웹 검색을 사용하여 다음 조건을 충족하는 종가 데이터를 찾으십시오:
                 1. 데이터 기준일은 ${selectedDate}에 가장 가깝고, 이 날짜를 초과하지 않는 가장 최근 거래일의 종가 데이터여야 합니다. (선택한 날짜 이전/당일 중 가장 최근 마감일)
@@ -360,13 +355,12 @@
 
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
-                tools: [{ "google_search": {} }], // Google Search Grounding 유지
+                tools: [{ "google_search": {} }],
                 
                 systemInstruction: {
                     parts: [{ text: systemPrompt }]
                 }
             };
-            // ----------------------------------------------------------------------
 
             for (let i = 0; i < MAX_RETRIES; i++) {
                 try {
@@ -389,7 +383,6 @@
                         throw new Error("API 응답에서 유효한 JSON 텍스트를 찾을 수 없거나 응답이 비어 있습니다.");
                     }
 
-                    // 응답이 JSON 형식이 아닐 경우를 대비한 추가 검증
                     let fetchedJson;
                     try {
                         fetchedJson = JSON.parse(jsonText);
@@ -401,7 +394,6 @@
 
                     currentFetchedData = fetchedJson;
                     
-                    // 현재 시각을 클라이언트에서 가져옴
                     const clientDateTime = getCurrentDateTime();
 
                     // 데이터 미리보기 렌더링
@@ -428,7 +420,6 @@
 
         // 가져온 데이터 미리보기 표시
         function renderFetchedData(data, clientTime) {
-            // stocksHtml에서 name과 symbol을 함께 표시
             const stocksHtml = data.stocks.map(stock => 
                 `<span class="inline-block bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-0.5 rounded-full mr-2 mb-1"
                       title="${stock.symbol}">
@@ -452,7 +443,6 @@
         // 가격 포맷팅 헬퍼
         function formatPrice(price) {
             if (typeof price === 'number') {
-                // 천 단위 콤마 추가 및 소수점 처리
                 return price.toLocaleString('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
             }
             return price;
@@ -479,7 +469,11 @@
                 return;
             }
 
-            journalData.unshift(newEntry); // 최신 데이터를 맨 앞에 추가
+            // [수정] 최신 데이터를 맨 뒤에 추가 (오래된 순서대로 표시)
+            journalData.push(newEntry); 
+            // 배열에 새로운 데이터가 추가되었으므로 다시 정렬
+            journalData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
             saveJournalData();
             
             // UI 초기화
@@ -523,7 +517,7 @@
             });
             
             headers.push(...dynamicDisplayHeaders);
-            headers.push('메모', '삭제'); // 메모와 삭제 버튼 헤더 추가
+            headers.push('메모 (클릭하여 수정)', '삭제'); // 메모 헤더 업데이트
 
             tableHead.innerHTML = `
                 <tr>
@@ -533,6 +527,12 @@
 
             // 2. 바디 생성
             tableBody.innerHTML = journalData.map(entry => {
+                // HTML 엔티티 이스케이프 함수
+                const escapeHtml = (unsafe) => {
+                    if (!unsafe) return '';
+                    return unsafe.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                };
+
                 let row = [
                     `<td class="font-medium text-gray-900 whitespace-nowrap">${entry.date}</td>`,
                     `<td>${formatPrice(entry.KOSPI)}</td>`,
@@ -552,7 +552,18 @@
                     row.push(`<td>${price}</td>`);
                 });
 
-                row.push(`<td><p class="max-w-xs truncate">${entry.memo}</p></td>`);
+                // [수정] 메모를 클릭하여 수정할 수 있는 Span 태그로 렌더링
+                row.push(`
+                    <td data-id="${entry.id}">
+                        <span id="memo-display-${entry.id}" 
+                              onclick="startEditingMemo(${entry.id})" 
+                              class="block cursor-pointer hover:bg-yellow-50 p-1 rounded-md max-w-xs break-words text-gray-700"
+                              title="클릭하여 수정">
+                            ${escapeHtml(entry.memo)}
+                        </span>
+                    </td>
+                `);
+
                 row.push(`<td>
                     <button onclick="deleteEntry(${entry.id})" 
                             class="text-red-500 hover:text-red-700 transition focus:outline-none">
@@ -571,6 +582,73 @@
             showMessage('기록이 삭제되었습니다.', false);
         }
 
+        // [추가] 메모 수정 시작
+        window.startEditingMemo = function(id) {
+            const displayElement = document.getElementById(`memo-display-${id}`);
+            if (!displayElement) return;
+
+            const currentMemo = displayElement.textContent.trim();
+            const parentCell = displayElement.parentElement;
+            
+            // 1. 텍스트 영역 생성
+            const textarea = document.createElement('textarea');
+            textarea.id = `memo-input-${id}`;
+            textarea.className = 'w-full p-1 border border-purple-400 rounded-md text-sm resize-none focus:ring-purple-500 focus:border-purple-500 shadow-inner';
+            textarea.value = currentMemo;
+            textarea.rows = Math.max(3, currentMemo.split('\n').length); // 메모 길이에 따라 높이 조정
+            textarea.setAttribute('data-original-memo', currentMemo); // Esc 키 복원을 위해 원본 저장
+
+            // 2. 수정 완료 (Blur 이벤트: 포커스를 잃으면 저장)
+            textarea.addEventListener('blur', () => {
+                saveMemo(id, textarea);
+            });
+            
+            // 3. Enter 키 입력 시 저장 (Shift+Enter는 줄 바꿈)
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    textarea.blur(); // blur 이벤트 발생시켜 저장 및 뷰 전환
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    // Esc 누르면 원본으로 복원
+                    const originalMemo = textarea.getAttribute('data-original-memo');
+                    const entryIndex = journalData.findIndex(entry => entry.id === id);
+                    if (entryIndex !== -1) {
+                        journalData[entryIndex].memo = originalMemo; // 임시로 원본 메모로 복원
+                    }
+                    textarea.blur(); // blur를 통해 renderJournalTable이 호출되도록 함
+                }
+            });
+
+            // 4. 교체 및 포커스
+            parentCell.innerHTML = '';
+            parentCell.appendChild(textarea);
+            textarea.focus();
+        }
+        
+        // [추가] 메모 저장 및 뷰 복원
+        function saveMemo(id, textareaElement) {
+            const newMemo = textareaElement.value.trim() || '메모 없음';
+            const entryIndex = journalData.findIndex(entry => entry.id === id);
+
+            if (entryIndex !== -1) {
+                // 내용이 변경된 경우에만 저장
+                if (journalData[entryIndex].memo !== newMemo) {
+                    journalData[entryIndex].memo = newMemo;
+                    saveJournalData(); // 로컬 스토리지에 저장 및 테이블 리렌더링
+                    showMessage('✅ 메모가 수정되었습니다.', false);
+                    return;
+                }
+            }
+
+            // 변경 사항이 없거나 오류가 발생했을 경우:
+            // renderJournalTable()을 호출하여 메모를 다시 <span> 태그로 되돌립니다.
+            renderJournalTable();
+            if (entryIndex === -1) {
+                showMessage('❌ 메모를 저장할 기록을 찾을 수 없습니다.', true);
+            }
+        }
+
         // CSV 파일로 다운로드
         function exportToCSV() {
             if (journalData.length === 0) {
@@ -583,7 +661,7 @@
             let headers = ['날짜', 'KOSPI', 'KOSDAQ'];
             const symbolKeys = [];
 
-            // [수정] 종목 이름과 코드를 함께 헤더로 사용
+            // 종목 이름과 코드를 함께 헤더로 사용
             firstEntry.stocks.forEach(stock => {
                 headers.push(`${stock.name} (${stock.symbol})`);
                 symbolKeys.push(stock.symbol);
@@ -610,6 +688,7 @@
                 });
 
                 // 메모 필드는 쉼표 문제 방지를 위해 따옴표로 감쌈
+                // 줄 바꿈은 공백으로 대체하고, 따옴표는 이중 따옴표로 이스케이프 처리
                 rowData.push(`"${entry.memo.replace(/"/g, '""').replace(/\n/g, ' ')}"`);
                 csvContent += rowData.join(',') + '\n';
             });
@@ -641,13 +720,13 @@
         // CSV 다운로드 버튼 클릭
         exportCsvBtn.addEventListener('click', exportToCSV);
         
-        // [추가] 종목 설정 입력란의 내용이 변경되거나 포커스를 잃으면 즉시 저장
+        // 종목 설정 입력란의 내용이 변경되거나 포커스를 잃으면 즉시 저장
         stockSymbolsInput.addEventListener('change', saveStockSymbols);
 
         // 초기 로드
         window.onload = () => {
             loadApiKey();
-            loadStockSymbols(); // [수정] 종목 코드를 가장 먼저 로드
+            loadStockSymbols();
             loadJournalData();
         };
 
