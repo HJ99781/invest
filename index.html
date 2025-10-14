@@ -578,14 +578,14 @@
                 return;
             }
 
-            // 1. 헤더 (CSV는 분석 편의를 위해 종목 코드를 헤더로 유지합니다)
+            // 1. 헤더 (CSV는 분석 편의를 위해 종목 이름과 코드를 함께 헤더로 유지합니다)
             const firstEntry = journalData[0];
             let headers = ['날짜', 'KOSPI', 'KOSDAQ'];
             const symbolKeys = [];
 
-            // 종목 코드만 헤더로 사용
+            // [수정] 종목 이름과 코드를 함께 헤더로 사용
             firstEntry.stocks.forEach(stock => {
-                headers.push(stock.symbol);
+                headers.push(`${stock.name} (${stock.symbol})`);
                 symbolKeys.push(stock.symbol);
             });
             headers.push('메모');
