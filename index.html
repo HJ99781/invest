@@ -593,7 +593,7 @@
             // 1. 텍스트 영역 생성
             const textarea = document.createElement('textarea');
             textarea.id = `memo-input-${id}`;
-            textarea.className = 'w-full p-1 border border-purple-400 rounded-md text-sm resize-none focus:ring-purple-500 focus:border-purple-500 shadow-inner';
+            textarea.className = 'w-40 p-1 border border-purple-400 rounded-md text-sm resize-none focus:ring-purple-500 focus:border-purple-500 shadow-inner';
             textarea.value = currentMemo;
             textarea.rows = Math.max(3, currentMemo.split('\n').length); // 메모 길이에 따라 높이 조정
             textarea.setAttribute('data-original-memo', currentMemo); // Esc 키 복원을 위해 원본 저장
@@ -733,3 +733,4 @@
     </script>
 </body>
 </html>
+
